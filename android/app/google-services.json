@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "251549106099",
+    "project_id": "atlas-jewellery-115d2",
+    "storage_bucket": "atlas-jewellery-115d2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:251549106099:android:882cf5f88443e7006355c6",
+        "android_client_info": {
+          "package_name": "com.example.atlas_gold_admin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDyIDiuaCGGYj2J0Ic8IlsEx-U5PykiXE8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
