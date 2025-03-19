@@ -4,6 +4,9 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'banner/bannerScreen.dart';
 import 'termsAndCondition/showTermsAndCond.dart';
+import 'refundPolicy/showRefundPolicy.dart';
+import 'aboutUs/showAboutUs.dart';
+import 'brochure/showBrochure.dart';
 
 class Sliderpage extends StatefulWidget {
   const Sliderpage({super.key});
@@ -21,80 +24,122 @@ class _SliderpageState extends State<Sliderpage> {
         backgroundColor: useColor.homeIconColor,
         title: Text("Sliders"),
       ),
-      body: Container(
-        height: MediaQuery.of(context).size.height * .2,
-        width: double.infinity,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                      color: Color.fromARGB(255, 255, 255, 255),
-                      borderRadius: BorderRadius.circular(10)),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                          width: double.infinity,
-                          height: MediaQuery.of(context).size.height * .11,
-                          child: IconButton(
-                              icon: FaIcon(FontAwesomeIcons.noteSticky,
-                                  size: 32, color: useColor.homeIconColor),
-                              onPressed: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => BannerScreen()));
-                              })),
-                      Text(
-                        "Banner",
-                        style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            color: Colors.grey.shade600),
-                      )
-                    ],
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          children: [
+            /// First Row (Banner & T&C)
+            Row(
+              children: [
+                Expanded(
+                  child: _buildContainer(
+                    icon: FontAwesomeIcons.noteSticky,
+                    label: "Banner",
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => BannerScreen()));
+                    },
                   ),
                 ),
-              ),
-              SizedBox(
-                width: 10,
-              ),
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                      color: Color.fromARGB(255, 255, 255, 255),
-                      borderRadius: BorderRadius.circular(10)),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                          width: double.infinity,
-                          height: MediaQuery.of(context).size.height * .11,
-                          child: IconButton(
-                              icon: FaIcon(FontAwesomeIcons.notdef,
-                                  size: 32, color: useColor.homeIconColor),
-                              onPressed: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            TermsAndCondition()));
-                              })),
-                      Text(
-                        "T & C",
-                        style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            color: Colors.grey.shade600),
-                      )
-                    ],
+                SizedBox(width: 10),
+                Expanded(
+                  child: _buildContainer(
+                    icon: FontAwesomeIcons.fileContract,
+                    label: "T & C",
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => TermsAndCondition()));
+                    },
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
+            SizedBox(height: 10),
+
+            /// Second Row (Refund Policy & About Us)
+            Row(
+              children: [
+                Expanded(
+                  child: _buildContainer(
+                    icon: FontAwesomeIcons.moneyBillWave,
+                    label: "Refund Policy",
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => Showrefundpolicy()));
+                    },
+                  ),
+                ),
+                SizedBox(width: 10),
+                Expanded(
+                  child: _buildContainer(
+                    icon: FontAwesomeIcons.infoCircle,
+                    label: "About Us",
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => Showaboutus()));
+                    },
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 10),
+
+            /// Third Row (Brochure)
+            Row(
+              children: [
+                Expanded(
+                  child: _buildContainer(
+                    icon: FontAwesomeIcons.book,
+                    label: "Brochure",
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => Showbrochure()));
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  /// Reusable Container Widget
+  Widget _buildContainer(
+      {required IconData icon,
+      required String label,
+      required Function() onTap}) {
+    return Container(
+      height: 150,
+      width: 100,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            icon: FaIcon(icon, size: 25, color: useColor.homeIconColor),
+            onPressed: onTap,
+          ),
+          Text(
+            label,
+            style: TextStyle(
+                fontWeight: FontWeight.w500, color: Colors.grey.shade600),
+          ),
+        ],
       ),
     );
   }

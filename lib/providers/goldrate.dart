@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:intl/intl.dart';
 
 class GoldrateModel {
   final String id;
@@ -105,6 +106,9 @@ class Goldrate with ChangeNotifier {
         'pavan': goldrateModel.pavan,
         'down': goldrateModel.down,
         'up': goldrateModel.up,
+        'updateDate':
+            DateFormat('dd-MM-yyyy').format(DateTime.now()), // Current date
+        'updateTime': DateFormat('hh:mm a').format(DateTime.now()),
       });
     } catch (e) {
       print(e);
