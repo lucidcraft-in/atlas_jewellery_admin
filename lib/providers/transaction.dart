@@ -357,6 +357,45 @@ class TransactionProvider with ChangeNotifier {
     }
   }
 
+
+  Future<Map<String, dynamic>> getDocumentCountAndLastAmount(String id) async {
+  try {
+    QuerySnapshot querySnapshot = await collectionReference
+        .where("customerId", isEqualTo: id)
+        .orderBy('date', descending: true)
+        .get();
+
+    int count = querySnapshot.size;
+    double lastAmount = 0;
+
+    // Get the last (most recent) transaction's amount if there are documents
+    if (count > 0) {
+      var lastTransaction = querySnapshot.docs.first; // first doc after sorting desc
+      lastAmount = lastTransaction['amount'];
+    }
+
+    return {"count": count, "lastAmount": lastAmount};
+  } catch (e) {
+    print(e);
+    return {"count": 0, "lastAmount": 0}; // return defaults on error
+  }
+}
+
+
+//   Future<int> getDocumentCount(String custId) async {
+//   try {
+//     QuerySnapshot querySnapshot = await collectionReference
+//         .where("customerId", isEqualTo: custId)
+//         .get();
+
+//     return querySnapshot.size; // Returns the number of documents
+//   } catch (e) {
+//     print(e);
+//     return 0; // Return 0 if an error occurs
+//   }
+// }
+
+
   Future<void> delete(
       String transId,
       TransactionModel transactionModel,

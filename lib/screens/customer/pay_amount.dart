@@ -263,9 +263,38 @@ class _PayAmountScreenState extends State<PayAmountScreen> {
   void initState() {
     loginData();
     super.initState();
+    print("==============");
+    print(widget.user!['schemeType']);
+    widget.user!['schemeType'] == '1 Year' ? getTransaction() : null;
 
     // initialise();
     requestPermission();
+  }
+
+  int transactionCount = 0;
+  double lastTransactionAmount = 0;
+
+  void getTransaction() async {
+    try {
+      final transactionProvider =
+          Provider.of<TransactionProvider>(context, listen: false);
+
+      final result = await transactionProvider
+          .getDocumentCountAndLastAmount(widget.userid!);
+
+      setState(() {
+        transactionCount = result["count"];
+        lastTransactionAmount = result["lastAmount"];
+      });
+      if (transactionCount >= 5) {
+        setState(() {
+          amtCntr.text = lastTransactionAmount.toString();
+        });
+      }
+      print("Transaction count: $transactionCount");
+    } catch (e) {
+      print("Error fetching transaction count: $e");
+    }
   }
 
   sendNotification(String title, String token, double amt) async {
@@ -343,108 +372,147 @@ class _PayAmountScreenState extends State<PayAmountScreen> {
     } catch (e) {}
   }
 
-  // Future _saveForm() async {
-  //   if (isLoad) return; // Prevent multiple calls
-
-  //   final isValid = _formKey.currentState!.validate();
-  //   if (!isValid) {
-  //     setState(() {
-  //       isLoad = false;
-  //     });
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(
-  //         content: Text('Please fill all required fields correctly!'),
-  //         backgroundColor: useColor.homeIconColor, // Red color for error
-  //       ),
-  //     );
-  //     return;
-  //   }
-  //   _formKey.currentState!.save();
-
-  //   setState(() {
-  //     _isLoading = true;
-  //   });
-  //   try {
-  //     _collection = CollectionModel(
-  //       staffId: _collection.staffId,
-  //       staffname: _collection.staffname,
-  //       recievedAmount: _transaction.amount,
-  //       paidAmount: _collection.paidAmount,
-  //       balance: _collection.balance,
-  //       date: selectedDate == null
-  //           ? DateTime(now.year, now.month, now.day)
-  //           : selectedDate!,
-  //       type: 0,
-  //       branch: branchId!,
-  //       // type 0 is recive amount
-  //     );
-  //     Provider.of<TransactionProvider>(context, listen: false)
-  //         .create(
-  //       _transaction,
-  //     )
-  //         .then((val) {
-  //       var data;
-  //       setState(() {
-  //         data = val;
-  //       });
-  //       print(data);
-  //       Provider.of<Collection>(context, listen: false)
-  //           .create(_collection, data[3])
-  //           .then(((value) {}));
-  //       // printReceipt("Recieve", widget.custName!, _transaction.amount, value);
-  //       setState(() {});
-  //       print(widget.token);
-  //       if (widget.token != null) {
-  //         sendNotification(
-  //             "Transaction Completed", widget.token!, _transaction.amount);
-  //       }
-
-  //       final snackBar = SnackBar(content: const Text("add Successfully...."));
-
-  //       ScaffoldMessenger.of(context).showSnackBar(snackBar);
-  //       Navigator.pop(context, true);
-  //     });
-  //   } catch (err) {
-  //     setState(() {
-  //       isLoad = false;
-  //     });
-  //     await showDialog(
-  //       context: context,
-  //       builder: (ctx) => AlertDialog(
-  //         title: Text('An error occurred!'),
-  //         content: Text('Something went wrong. ${err}'),
-  //         actions: <Widget>[
-  //           OutlinedButton(
-  //             child: Text('Okay'),
-  //             onPressed: () {
-  //               Navigator.of(ctx).pop();
-  //             },
-  //           )
-  //         ],
-  //       ),
-  //     );
-  //   }
-  //   setState(() {
-  //     _isLoading = false;
-  //   });
-  // }
+  TextEditingController amtCntr = TextEditingController();
 
   Future<void> _saveForm() async {
     if (isLoad) return; // Prevent multiple taps
-    setState(() => isLoad = true); // Set before validation
+    setState(() => isLoad = true);
 
     final isValid = _formKey.currentState!.validate();
     if (!isValid) {
       setState(() => isLoad = false);
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Please fill all required fields correctly!'),
-          backgroundColor: useColor.homeIconColor, // Red color for error
+          backgroundColor: useColor.homeIconColor,
         ),
       );
       return;
     }
+
+    double? enteredAmount = double.tryParse(amtCntr.text);
+    if (enteredAmount == null) {
+      setState(() => isLoad = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please enter a valid amount'),
+          backgroundColor: useColor.homeIconColor,
+        ),
+      );
+      return;
+    }
+
+    if (widget.user == null || widget.user!['schemeType'] == null) {
+      setState(() => isLoad = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('User data is missing or invalid'),
+          backgroundColor: useColor.homeIconColor,
+        ),
+      );
+      return;
+    }
+
+    if (widget.user!['schemeType'] == '1 Year') {
+      if (transactionCount < 5 && enteredAmount < 1000) {
+        setState(() => isLoad = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Please enter an amount of ₹1000 or more'),
+            backgroundColor: useColor.homeIconColor,
+          ),
+        );
+        return;
+      }
+
+      // if (transactionCount == 5) {
+      //   double fifthMonthAmount =
+      //       double.parse(widget.user!['transaction'] ?? '0');
+      //   if (enteredAmount != fifthMonthAmount) {
+      //     setState(() => isLoad = false);
+      //     ScaffoldMessenger.of(context).showSnackBar(
+      //       SnackBar(
+      //         content: Text(
+      //             'Amount must match the 5th month: ₹${fifthMonthAmount.toStringAsFixed(2)}'),
+      //         backgroundColor: useColor.homeIconColor,
+      //       ),
+      //     );
+      //     return;
+      //   }
+      // }
+    } else {
+      if (enteredAmount < 1000 || enteredAmount > 5000) {
+        setState(() => isLoad = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Please enter an amount between ₹1000 - ₹5000'),
+            backgroundColor: useColor.homeIconColor,
+          ),
+        );
+        return;
+      }
+    }
+
+    // if (isLoad) return; // Prevent multiple taps
+    // setState(() => isLoad = true); // Set before validation
+
+    // final isValid = _formKey.currentState!.validate();
+    // if (!isValid) {
+    //   setState(() => isLoad = false);
+
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     SnackBar(
+    //       content: Text('Please fill all required fields correctly!'),
+    //       backgroundColor: useColor.homeIconColor, // Red color for error
+    //     ),
+    //   );
+    //   return;
+    // }
+
+    // double enteredAmount = double.parse(amtCntr.text);
+
+    // if (widget.user!['schemeType'] == '1 Year') {
+    //   if (transactionCount < 5) {
+    //     if (enteredAmount < 1000) {
+    //       setState(() => isLoad = false);
+    //       ScaffoldMessenger.of(context).showSnackBar(
+    //         SnackBar(
+    //           content: Text('Please enter an amount of 1000 or more'),
+    //           backgroundColor: useColor.homeIconColor,
+    //         ),
+    //       );
+    //       return;
+    //     }
+    //   }
+
+    //   // else {
+    //   //   double fifthMonthAmount =
+    //   //       double.parse(widget.user!['transaction'] ?? '0');
+
+    //   //   if (enteredAmount != fifthMonthAmount) {
+    //   //     setState(() => isLoad = false);
+    //   //     ScaffoldMessenger.of(context).showSnackBar(
+    //   //       SnackBar(
+    //   //         content: Text(
+    //   //             'Amount must continue from 5th month: ₹${fifthMonthAmount.toStringAsFixed(2)}'),
+    //   //         backgroundColor: useColor.homeIconColor,
+    //   //       ),
+    //   //     );
+    //   //     return;
+    //   //   }
+    //   // }
+    // } else {
+    //   if (enteredAmount < 1000 || enteredAmount > 5000) {
+    //     setState(() => isLoad = false);
+    //     ScaffoldMessenger.of(context).showSnackBar(
+    //       SnackBar(
+    //         content: Text('Please enter an amount between ₹1000 - ₹5000'),
+    //         backgroundColor: useColor.homeIconColor,
+    //       ),
+    //     );
+    //     return;
+    //   }
+    // }
 
     _formKey.currentState!.save();
 
@@ -527,6 +595,10 @@ class _PayAmountScreenState extends State<PayAmountScreen> {
                     ),
                     Text(
                         "Recieve Staff : ${staffDetails != null ? staffDetails['staffName'] : ""}"),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    Text("Customer Scheme : ${widget.user!['schemeType']}"),
                     SizedBox(
                       height: 10,
                     ),
