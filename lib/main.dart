@@ -11,7 +11,7 @@ import './screens/auth/login_screen.dart';
 import './screens/gold_rate/gold_rate.dart';
 import './screens/slider/slider_view.dart';
 import './screens/customer/customer_screen.dart';
-import './screens/customer/create_customer_screen.dart';
+// import './screens/customer/create_customer_screen.dart';
 import './screens/customer/update_customer.dart';
 import './screens/customer/customer_view.dart';
 import './screens/customer/pay_amount.dart';
@@ -36,6 +36,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'providers/cmpService.dart';
 import 'providers/paymentBill.dart';
 import 'providers/storage_service.dart';
+import 'screens/customer/create_customer_screene.dart';
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // If you're going to use other Firebase services in the background, such as Firestore,

@@ -93,7 +93,6 @@ class _AdddetailsState extends State<Adddetails> {
         child: Column(
           children: [
             Container(
-              height: 400,
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
                 color: Colors.white, // Background color

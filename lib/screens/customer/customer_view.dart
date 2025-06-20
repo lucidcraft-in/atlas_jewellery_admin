@@ -83,7 +83,9 @@ class _CustomerViewScreenState extends State<CustomerViewScreen> {
   @override
   void initState() {
     loginData();
+
     super.initState();
+    print(widget.user!);
     getUpdateBalance();
 
     // userId = ModalRoute.of(context).settings.arguments;
@@ -123,6 +125,7 @@ class _CustomerViewScreenState extends State<CustomerViewScreen> {
     } catch (err) {}
   }
 
+  bool showProofs = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -143,100 +146,6 @@ class _CustomerViewScreenState extends State<CustomerViewScreen> {
                 },
               )
           ],
-          // actions: [
-          // staffType != 0
-          //     ?
-          // PopupMenuButton(
-          //   icon: Icon(Icons.settings),
-          //   itemBuilder: (BuildContext context) {
-          //     return [
-          //       PopupMenuItem(
-          //         child: GestureDetector(
-          //             onTap: () {
-          //               Navigator.pushReplacement(
-          //                   context,
-          //                   MaterialPageRoute(
-          //                       builder: (context) =>
-          //                           UpdateCustomerScreen(
-          //                               db: widget.dbUser,
-          //                               user: widget.user)));
-          //             },
-          //             child: ListTile(
-          //               leading: Icon(
-          //                 Icons.edit,
-          //                 color: Colors.blueGrey,
-          //               ),
-          //               title: Text("Edit"),
-          //             )),
-          //       ),
-          //       PopupMenuItem(
-          //         child: GestureDetector(
-          //             onTap: () {
-          //               // Navigator.push(
-          //               //     context,
-          //               //     MaterialPageRoute(
-          //               //         builder: (context) =>
-          //               //             UpdateCustomerScreen(
-          //               //                 db: widget.dbUser,
-          //               //                 user: widget.user)));
-          //             },
-          //             child: GestureDetector(
-          //               onTap: () {
-          //                 showDialog(
-          //                     context: context,
-          //                     builder: (context) {
-          //                       return AlertDialog(
-          //                         content: Container(
-          //                           width: 300,
-          //                           height: 100,
-          //                           child: Column(
-          //                             mainAxisAlignment:
-          //                                 MainAxisAlignment.spaceAround,
-          //                             crossAxisAlignment:
-          //                                 CrossAxisAlignment.start,
-          //                             children: [
-          //                               Text(
-          //                                   "Do You Want To Delete...!"),
-          //                               Row(
-          //                                 mainAxisAlignment:
-          //                                     MainAxisAlignment.end,
-          //                                 children: [
-          //                                   GestureDetector(
-          //                                       onTap: () {
-          //                                         Navigator.pop(
-          //                                             context);
-          //                                       },
-          //                                       child: Text("Cancel")),
-          //                                   SizedBox(
-          //                                     width: 20,
-          //                                   ),
-          //                                   GestureDetector(
-          //                                       onTap: () {
-          //                                         _delete();
-          //                                       },
-          //                                       child: Text("Ok"))
-          //                                 ],
-          //                               )
-          //                             ],
-          //                           ),
-          //                         ),
-          //                       );
-          //                     });
-          //               },
-          //               child: ListTile(
-          //                 leading: Icon(
-          //                   Icons.delete_forever,
-          //                   color: Colors.red,
-          //                 ),
-          //                 title: Text("Delete"),
-          //               ),
-          //             )),
-          //       ),
-          //     ];
-          //   })
-          // Container()
-          // : Container()
-          // ],
         ),
         body: Container(
           height: MediaQuery.of(context).size.height,
@@ -305,56 +214,6 @@ class _CustomerViewScreenState extends State<CustomerViewScreen> {
                                 ],
                               ),
                             )),
-                            // Padding(
-                            //   padding: EdgeInsets.only(top: 10, bottom: 10),
-                            //   child: Container(
-                            //     width: 1,
-                            //     height: 100,
-                            //     color: Colors.black12,
-                            //   ),
-                            // ),
-                            // Expanded(
-                            //     child: Container(
-                            //    child: Column(
-                            //     mainAxisAlignment:
-                            //         MainAxisAlignment.spaceEvenly,
-                            //     children: [
-                            //       Text(
-                            //         "Total Gram ",
-                            //         textAlign: TextAlign.center,
-                            //         style: TextStyle(
-                            //             color: Colors.grey[500],
-                            //             fontFamily: 'latto'),
-                            //       ),
-                            //       Row(
-                            //         mainAxisAlignment: MainAxisAlignment.center,
-                            //         children: [
-                            //           FaIcon(
-                            //             FontAwesomeIcons.coins,
-                            //             size: 17,
-                            //             color: Theme.of(context).primaryColor,
-                            //           ),
-                            //           SizedBox(
-                            //             width: 10,
-                            //           ),
-                            //           Text(
-                            //             data.isNotEmpty
-                            //                 ? data[0]["total_gram"]
-                            //                     .toStringAsFixed(3)
-                            //                 : 0.toString(),
-                            //             // alllist != null
-                            //             //     ? " ${balancegram.toStringAsFixed(3)}"
-                            //             //     : "0.00",
-                            //             style: TextStyle(
-                            //                 fontWeight: FontWeight.bold,
-                            //                 fontFamily: 'latto',
-                            //                 fontSize: 15),
-                            //           ),
-                            //         ],
-                            //       )
-                            //     ],
-                            //   ),
-                            // ))
                           ],
                         ),
                       ),
@@ -543,6 +402,80 @@ class _CustomerViewScreenState extends State<CustomerViewScreen> {
                   ),
                 ),
               ),
+              TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    showProofs = !showProofs;
+                  });
+                },
+                icon: Icon(showProofs ? Icons.expand_less : Icons.expand_more),
+                label: Text(showProofs ? 'Hide Proofs' : 'Show Proofs'),
+              ),
+
+              // Proofs Images
+              if (showProofs)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12.0, vertical: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Uploaded Proofs',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Customer Proof
+                      if (widget.user!['customerProof'] != null)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Customer Proof',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 4),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(
+                                widget.user!['customerProof'],
+                                height: 150,
+                                width: double.infinity,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                          ],
+                        ),
+
+                      // Nominee Proof
+                      if (widget.user!['nomineeProof'] != null)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Nominee Proof',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 4),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(
+                                widget.user!['nomineeProof'],
+                                height: 150,
+                                width: double.infinity,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -721,61 +654,6 @@ class _CustomerViewScreenState extends State<CustomerViewScreen> {
                                                       MainAxisAlignment
                                                           .spaceEvenly,
                                                   children: [
-                                                    // Row(
-                                                    //   mainAxisAlignment:
-                                                    //       MainAxisAlignment
-                                                    //           .spaceBetween,
-                                                    //   children: [
-                                                    //     Text(
-                                                    //       "Gram Price",
-                                                    //       style: TextStyle(
-                                                    //         fontFamily: 'latto',
-                                                    //         fontSize: 12,
-                                                    //         color:
-                                                    //             Colors.black87,
-                                                    //       ),
-                                                    //     ),
-                                                    //     Text(
-                                                    //       transactionList[index]
-                                                    //               [
-                                                    //               'gramPriceInvestDay']
-                                                    //           .toString(),
-                                                    //       style: TextStyle(
-                                                    //         fontFamily: 'latto',
-                                                    //         fontSize: 12,
-                                                    //         color:
-                                                    //             Colors.black87,
-                                                    //       ),
-                                                    //     )
-                                                    //   ],
-                                                    // ),
-                                                    // Row(
-                                                    //   mainAxisAlignment:
-                                                    //       MainAxisAlignment
-                                                    //           .spaceBetween,
-                                                    //   children: [
-                                                    //     Text(
-                                                    //       "Gram Weight",
-                                                    //       style: TextStyle(
-                                                    //         fontFamily: 'latto',
-                                                    //         fontSize: 12,
-                                                    //         color:
-                                                    //             Colors.black87,
-                                                    //       ),
-                                                    //     ),
-                                                    //     Text(
-                                                    //       transactionList[index]
-                                                    //               ['gramWeight']
-                                                    //           .toString(),
-                                                    //       style: TextStyle(
-                                                    //         fontFamily: 'latto',
-                                                    //         fontSize: 12,
-                                                    //         color:
-                                                    //             Colors.black87,
-                                                    //       ),
-                                                    //     )
-                                                    //   ],
-                                                    // ),
                                                     Container(
                                                       height: 1,
                                                       color: Colors.black12,
@@ -884,19 +762,7 @@ class _CustomerViewScreenState extends State<CustomerViewScreen> {
                     SizedBox(height: 10),
                     // Select Date button and display selected date
                     TextButton(
-                      onPressed: () async {
-                        // DateTime? pickedDate = await showDatePicker(
-                        //   context: context,
-                        //   initialDate: DateTime.now(),
-                        //   firstDate: DateTime(2000),
-                        //   lastDate: DateTime(2101),
-                        // );
-                        // if (pickedDate != null) {
-                        //   setState(() {
-                        //     selectedDate = pickedDate;
-                        //   });
-                        // }
-                      },
+                      onPressed: () async {},
                       child: Text(
                         selectedDate == null
                             ? 'Select Closing Date'

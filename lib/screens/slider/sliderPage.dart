@@ -1,7 +1,10 @@
+import 'package:atlas_gold_admin/screens/slider/cancelation/cancelationPlcy.dart';
+import 'package:atlas_gold_admin/screens/slider/privacyPolicy/privacyPolicy.dart';
 import 'package:flutter/material.dart';
 import '../../constant/colors.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+import 'aboutUs/addDetails.dart';
 import 'banner/bannerScreen.dart';
 import 'termsAndCondition/showTermsAndCond.dart';
 import 'refundPolicy/showRefundPolicy.dart';
@@ -84,7 +87,37 @@ class _SliderpageState extends State<Sliderpage> {
                       Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => Showaboutus()));
+                              builder: (context) => Adddetails()));
+                    },
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildContainer(
+                    icon: FontAwesomeIcons.shield,
+                    label: "Privacy Policy",
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => Privacypolicy()));
+                    },
+                  ),
+                ),
+                SizedBox(width: 10),
+                Expanded(
+                  child: _buildContainer(
+                    icon: FontAwesomeIcons.cancel,
+                    label: "Cancelation Policy",
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => Cancelationplcy()));
                     },
                   ),
                 ),

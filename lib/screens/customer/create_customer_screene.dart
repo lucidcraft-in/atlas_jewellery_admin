@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,6 +10,7 @@ import './customer_screen.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user.dart';
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
 
 class CreateCustomerScreen extends StatefulWidget {
   static const routeName = '/create-customer';
@@ -23,12 +26,34 @@ class _CreateCustomerScreenState extends State<CreateCustomerScreen> {
   User? db;
   List userList = [];
   TextEditingController custIdCntrl = TextEditingController();
-  List branches = [
-    {"id": 0, "name": "Thrissur Golden Alathur"},
-    {"id": 1, "name": "Thrissur Golden Chittur"},
-    {"id": 2, "name": "Thrissur Golden Pattambi "},
-    {"id": 3, "name": "Thrissur Golden Vadakkencherri "},
-  ];
+  File? _nomineeProofImage;
+  String? _nomineeProofPath;
+  String? _nomineeProofFileName;
+  File? _custProofImage;
+  String? _custProofPath;
+  String? _custProofFileName;
+
+  Future<void> _pickNomineeProofImage(String proof) async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      if (proof == "nom") {
+        setState(() {
+          _nomineeProofImage = File(pickedFile.path);
+          _nomineeProofPath = pickedFile.path;
+          _nomineeProofFileName = pickedFile.name;
+        });
+      } else {
+        setState(() {
+          _custProofImage = File(pickedFile.path);
+          _custProofPath = pickedFile.path;
+          _custProofFileName = pickedFile.name;
+        });
+      }
+    }
+  }
+
   DateTime? selectedDate;
   DateTime now = DateTime.now();
   String custid = "";
@@ -39,8 +64,7 @@ class _CreateCustomerScreenState extends State<CreateCustomerScreen> {
 
     // TODO: implement initState
     super.initState();
-    // Provider.of<SchemeSrevice>(context, listen: false).fetchSchemes();
-
+    createCustId();
     setData();
   }
 
@@ -53,7 +77,7 @@ class _CreateCustomerScreenState extends State<CreateCustomerScreen> {
       print(staffDetails);
     });
     // print("++++++++++++++++++++++++++");
-    // print(staffDetails);
+
     _selectStaff = staffDetails["id"];
     _selectStaffName = staffDetails["staffName"];
 
@@ -90,7 +114,6 @@ class _CreateCustomerScreenState extends State<CreateCustomerScreen> {
       Map a = {
         "id": doc.id,
         "altr_config": doc["altr_config"],
-        // "altr_config2": doc["altr_config2"],
       };
       counter.add(a);
     }
@@ -99,21 +122,9 @@ class _CreateCustomerScreenState extends State<CreateCustomerScreen> {
   }
 
   getStaff() async {
-    // Provider.of<User>(context, listen: false).read(0).then((value) {
-    //   print("==================");
-    //   print(value);
-    //   setState(() {
-    //     staffList = value;
-    //     _selectStaff = staffList[0]["id"];
-    //   });
-    // });
     Provider.of<Staff>(context, listen: false).read().then((value) {
-      // print("==================");
-      // print(value);
       setState(() {
         staffList = value!;
-        print('============');
-        print(staffList);
       });
     });
   }
@@ -183,8 +194,21 @@ class _CreateCustomerScreenState extends State<CreateCustomerScreen> {
 
       return;
     }
+    if (_nomineeProofImage == null || _custProofFileName == null) {
+      setState(() => isClick = false);
 
-    if (selectSchemeType != null && selectOdType != null) {
+      // Show snackbar if form is not valid
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please upload proffs!'),
+          backgroundColor: useColor.homeIconColor, // Red color for error
+        ),
+      );
+
+      return;
+    }
+
+    if (selectOdType != null) {
       setState(() {
         isClick = true;
         _isLoading = true;
@@ -220,17 +244,25 @@ class _CreateCustomerScreenState extends State<CreateCustomerScreen> {
         CollectionReference collectionReference =
             FirebaseFirestore.instance.collection("cust_Id_Config");
 
-        bool? isCreated = await Provider.of<User>(context, listen: false)
-            .create(_user, custIdCntrl.text, selectSchemeType!, _selectStaff,
-                _selectStaffName, selectOdType!);
+        bool? isCreated =
+            await Provider.of<User>(context, listen: false).create(
+          _user,
+          custIdCntrl.text,
+          _selectStaff,
+          _selectStaffName,
+          selectOdType!,
+          _custProofFileName!,
+          _custProofImage!,
+          _nomineeProofFileName!,
+          _nomineeProofImage!,
+        );
 
         if (!isCreated!) {
           // Update Firestore Counter
-          String counterKey =
-              selectSchemeType == "Ponkoot" ? "altr_config" : "altr_config2";
+
           await collectionReference
               .doc(counter[0]["id"])
-              .update({counterKey: FieldValue.increment(1)});
+              .update({"altr_config": FieldValue.increment(1)});
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Saved successfully!')),
@@ -268,7 +300,7 @@ class _CreateCustomerScreenState extends State<CreateCustomerScreen> {
     } else {
       setState(() => isClick = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Select User Type and Scheme...')),
+        SnackBar(content: Text('Select User Type..')),
       );
     }
   }
@@ -276,8 +308,6 @@ class _CreateCustomerScreenState extends State<CreateCustomerScreen> {
   String _selectStaff = "";
   String _selectStaffName = "";
   List staffList = [];
-  String? selectSchemeType;
-  final List<String> schemeTypeList = ["1 Year", "2 Year"];
 
   String? selectOdType;
   final List<String> orderAdvList = ["Gold", "Cash"];
@@ -336,27 +366,23 @@ class _CreateCustomerScreenState extends State<CreateCustomerScreen> {
                           SizedBox(
                             height: 12,
                           ),
-                          DropdownButtonFormField<String>(
-                            value: selectSchemeType,
-                            hint: Text('Select Scheme Type'),
-                            onChanged: (String? newValue) {
-                              setState(() {
-                                selectSchemeType = newValue;
-                              });
-
-                              createCustId(
-                                  selectSchemeType == "1 Year" ? "ONE" : "TWO");
-                            },
-                            items: schemeTypeList
-                                .map<DropdownMenuItem<String>>((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              );
-                            }).toList(),
-                            decoration: InputDecoration(
-                              labelText: 'Scheme Type',
-                              border: OutlineInputBorder(),
+                          TextFormField(
+                            initialValue: 'Golden Tree', // Set default name
+                            readOnly: true, // Make the field non-editable
+                            decoration: const InputDecoration(
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Colors.red,
+                                  width: 1.0,
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Colors.black,
+                                  width: 1.0,
+                                ),
+                              ),
+                              labelText: 'Scheme Name',
                             ),
                           ),
                           SizedBox(
@@ -420,32 +446,6 @@ class _CreateCustomerScreenState extends State<CreateCustomerScreen> {
                               }
                               return null;
                             },
-                            // onChanged: (value) => setState(() {
-                            //   custid = value;
-                            // }),
-                            // onSaved: (value) {
-                            // _user = UserModel(
-                            //     name: _user.name,
-                            //     custId: value!,
-                            //     phoneNo: _user.phoneNo,
-                            //     address: _user.address,
-                            //     place: _user.place,
-                            //     staffId: _user.staffId,
-                            //     schemeType: _user.schemeType,
-                            //     balance: _user.balance,
-                            //     id: _user.id,
-                            //     token: _user.token,
-                            //     totalGram: _user.totalGram,
-                            //     branch: _user.branch,
-                            //     dateofBirth: _user.dateofBirth,
-                            //     nominee: _user.nominee,
-                            //     nomineePhone: _user.nomineePhone,
-                            //     nomineeRelation: _user.nomineeRelation,
-                            //     adharCard: _user.adharCard,
-                            //     panCard: _user.panCard,
-                            //     pinCode: _user.pinCode,
-                            //     staffName: _user.staffName);
-                            // },
                             decoration: const InputDecoration(
                               focusedBorder: OutlineInputBorder(
                                 borderSide: BorderSide(
@@ -844,8 +844,97 @@ class _CreateCustomerScreenState extends State<CreateCustomerScreen> {
                               labelText: 'Nominee Relation',
                             ),
                           ),
+                          SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  'Nominee Proof',
+                                  style: TextStyle(
+                                    // fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: Colors.grey[900],
+                                  ),
+                                ),
+                              ),
+                              OutlinedButton.icon(
+                                onPressed: () {
+                                  _pickNomineeProofImage("nom");
+                                },
+                                icon: Icon(Icons.upload_file,
+                                    color: Colors.blueAccent),
+                                label: Text(
+                                  'Upload Image',
+                                  style: TextStyle(
+                                    color: Colors.blueAccent,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  side: BorderSide(color: Colors.blueAccent),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 10),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (_nomineeProofFileName != null) ...[
+                            SizedBox(height: 14),
+                            Text(
+                              'Selected file: $_nomineeProofFileName',
+                              style: TextStyle(
+                                // color: Colors.grey[700],
+                                fontSize: 14,
+                                // fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                          if (_nomineeProofImage != null) ...[
+                            SizedBox(height: 14),
+                            Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.file(
+                                    _nomineeProofImage!,
+                                    height: 120,
+                                    width: 120,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 6,
+                                  right: 6,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        _nomineeProofImage = null;
+                                        _nomineeProofFileName = null;
+                                      });
+                                    },
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.black54,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        Icons.close,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                           SizedBox(
-                            height: 10,
+                            height: 12,
                           ),
                           TextFormField(
                             onSaved: (value) {
@@ -888,6 +977,101 @@ class _CreateCustomerScreenState extends State<CreateCustomerScreen> {
                               labelText: 'Adhar Card',
                             ),
                           ),
+                          SizedBox(
+                            height: 10,
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  'Customer Adhar',
+                                  style: TextStyle(
+                                    // fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: Colors.grey[900],
+                                  ),
+                                ),
+                              ),
+                              OutlinedButton.icon(
+                                onPressed: () {
+                                  _pickNomineeProofImage("cust");
+                                },
+                                icon: Icon(Icons.upload_file,
+                                    color: Colors.blueAccent),
+                                label: Text(
+                                  'Upload Image',
+                                  style: TextStyle(
+                                    color: Colors.blueAccent,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  side: BorderSide(color: Colors.blueAccent),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 10),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          //                           File? _custProofImage;
+                          // String? _custProofPath;
+                          // String? _custProofFileName;
+                          if (_custProofFileName != null) ...[
+                            SizedBox(height: 14),
+                            Text(
+                              'Selected file: $_custProofFileName',
+                              style: TextStyle(
+                                // color: Colors.grey[700],
+                                fontSize: 14,
+                                // fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                          if (_custProofImage != null) ...[
+                            SizedBox(height: 14),
+                            Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.file(
+                                    _custProofImage!,
+                                    height: 120,
+                                    width: 120,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 6,
+                                  right: 6,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        _custProofImage = null;
+                                        _custProofFileName = null;
+                                      });
+                                    },
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.black54,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        Icons.close,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                           SizedBox(
                             height: 10,
                           ),
@@ -1032,40 +1216,25 @@ class _CreateCustomerScreenState extends State<CreateCustomerScreen> {
     });
   }
 
-  createCustId(String scheme) {
+  createCustId() {
     db = User();
     db!.initiliase();
-    db!.readbyBranchId(staffDetails['branch']).then((value) {
+
+    db!.readbyBranchId().then((value) {
       setState(() {
         userList = value!;
       });
 
       if (userList.length > 0) {
-        if (scheme == "ONE") {
-          // print("-------- ex pon -------");
-          setState(() {
-            custid = "ONE_${counter[0]["altr_config"]}";
-            custIdCntrl.text = custid;
-          });
-        } else {
-          // print("-------- ex sn -------");
-          setState(() {
-            custid = "TWO_${counter[0]["altr_config"]}";
-            custIdCntrl.text = custid;
-          });
-        }
+        setState(() {
+          custid = "GT_${counter[0]["altr_config"]}";
+          custIdCntrl.text = custid;
+        });
       } else {
-        if (scheme == "ONE") {
-          setState(() {
-            custid = "ONE_1";
-            custIdCntrl.text = custid;
-          });
-        } else {
-          setState(() {
-            custid = "TWO_1";
-            custIdCntrl.text = custid;
-          });
-        }
+        setState(() {
+          custid = "GT_1";
+          custIdCntrl.text = custid;
+        });
       }
     });
   }

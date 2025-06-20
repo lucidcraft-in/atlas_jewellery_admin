@@ -1,6 +1,6 @@
-import 'dart:ffi';
-
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firbase_storage;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
@@ -109,6 +109,9 @@ class User with ChangeNotifier {
     firestore = FirebaseFirestore.instance;
   }
 
+  final firbase_storage.FirebaseStorage storage =
+      firbase_storage.FirebaseStorage.instance;
+
   CollectionReference collectionReference =
       FirebaseFirestore.instance.collection('user');
 
@@ -135,11 +138,26 @@ class User with ChangeNotifier {
   Future<bool?> create(
       UserModel userModel,
       String customerId,
-      String schemeType,
       String assignStaff,
       String assignStaffName,
-      String orderAdv) async {
+      String orderAdv,
+      String custProofName,
+      File custProofPath,
+      String nomProofName,
+      File nomProofPath) async {
     try {
+      print("---------");
+      print(custProofName);
+      firbase_storage.TaskSnapshot taskSnapshot =
+          await storage.ref('proofs/$custProofName').putFile(custProofPath);
+      final String downloadUrlCust = await taskSnapshot.ref.getDownloadURL();
+      print(downloadUrlCust);
+      print("----- nom----");
+      print(nomProofName);
+      firbase_storage.TaskSnapshot taskSnapshot1 =
+          await storage.ref('proofs/$nomProofName').putFile(nomProofPath);
+      final String downloadUrlNom = await taskSnapshot1.ref.getDownloadURL();
+      print(nomProofName);
       QuerySnapshot querySnapshot;
 
       querySnapshot = await collectionReference.orderBy('custId').get();
@@ -160,7 +178,7 @@ class User with ChangeNotifier {
           //  userModel.staffId,
           'timestamp': FieldValue.serverTimestamp(),
           'token': "",
-          'schemeType': schemeType,
+          'schemeType': "Golden Tree",
           // "scheme": {"id": scheme.id, "name": scheme.name},
           'total_gram': 0.0000,
           'branch': userModel.branch,
@@ -172,7 +190,10 @@ class User with ChangeNotifier {
           'panCard': userModel.panCard,
           'pinCode': userModel.pinCode,
           'staffName': assignStaffName,
-          //  userModel.staffName,
+          "nomineeProofname": nomProofName,
+          "nomineeProof": downloadUrlNom,
+          "customerProofname": custProofName,
+          "customerProof": downloadUrlCust,
           "otp": 0,
           "isClosed": "false",
           "otpExp": FieldValue.serverTimestamp(),
@@ -356,6 +377,10 @@ class User with ChangeNotifier {
             "panCard": doc['panCard'],
             "pinCode": doc['pinCode'],
             "staffName": doc['staffName'],
+            "nomineeProofname": doc["nomineeProofname"],
+            "nomineeProof": doc["nomineeProof"],
+            "customerProofname": doc["customerProofname"],
+            "customerProof": doc["customerProof"],
           };
           userlist.add(a);
         }
@@ -367,7 +392,7 @@ class User with ChangeNotifier {
     }
   }
 
-  Future<List?> readbyBranchId(int branchId) async {
+  Future<List?> readbyBranchId() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     var Staff = jsonDecode(prefs.getString('staff')!);
@@ -379,7 +404,7 @@ class User with ChangeNotifier {
 
     try {
       querySnapshot = await collectionReference
-          .where("branch", isEqualTo: branchId)
+          // .where("branch", isEqualTo: branchId)
           // .snapshots()
           // .last;
           .orderBy("timestamp", descending: true)

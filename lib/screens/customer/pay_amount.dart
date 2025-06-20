@@ -286,6 +286,7 @@ class _PayAmountScreenState extends State<PayAmountScreen> {
         transactionCount = result["count"];
         lastTransactionAmount = result["lastAmount"];
       });
+      print(lastTransactionAmount);
       if (transactionCount >= 5) {
         setState(() {
           amtCntr.text = lastTransactionAmount.toString();
@@ -390,31 +391,8 @@ class _PayAmountScreenState extends State<PayAmountScreen> {
       return;
     }
 
-    double? enteredAmount = double.tryParse(amtCntr.text);
-    if (enteredAmount == null) {
-      setState(() => isLoad = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Please enter a valid amount'),
-          backgroundColor: useColor.homeIconColor,
-        ),
-      );
-      return;
-    }
-
-    if (widget.user == null || widget.user!['schemeType'] == null) {
-      setState(() => isLoad = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('User data is missing or invalid'),
-          backgroundColor: useColor.homeIconColor,
-        ),
-      );
-      return;
-    }
-
     if (widget.user!['schemeType'] == '1 Year') {
-      if (transactionCount < 5 && enteredAmount < 1000) {
+      if (transactionCount < 5 && double.parse(amtCntr.text) < 1000) {
         setState(() => isLoad = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -441,7 +419,8 @@ class _PayAmountScreenState extends State<PayAmountScreen> {
       //   }
       // }
     } else {
-      if (enteredAmount < 1000 || enteredAmount > 5000) {
+      double amt = double.parse(amtCntr.text);
+      if (amt < 1000 || amt > 5000) {
         setState(() => isLoad = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -610,6 +589,12 @@ class _PayAmountScreenState extends State<PayAmountScreen> {
                         }
                         return null;
                       },
+                      controller: amtCntr,
+                      readOnly: widget.user!['schemeType'] == '1 Year'
+                          ? transactionCount >= 5
+                              ? true
+                              : false
+                          : false,
                       onSaved: (value) {
                         _transaction = TransactionModel(
                             customerName: _transaction.customerName,
